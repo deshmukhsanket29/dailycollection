@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Profile - Daily Collection System{% endblock %}
+
+{% block content %}
+<!-- Back Button -->
+<div class="mb-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="profile-info">
+        {% if customer.photo %}
+        <img src="{{ url_for('static', filename='uploads/' + customer.photo) }}" 
+             alt="{{ customer.name }}" 
+             class="profile-avatar">
+        {% else %}
+        <div class="profile-avatar bg-white d-flex align-items-center justify-content-center">
+            <i class="bi bi-person" style="font-size: 48px; color: #3b82f6;"></i>
+        </div>
+        {% endif %}
+        <div class="profile-details">
+            <h2>{{ customer.name }}</h2>
+            <p><i class="bi bi-phone me-2"></i>{{ customer.mobile }}</p>
+            <p><i class="bi bi-geo-alt me-2"></i>{{ customer.address or 'Address not provided' }}</p>
+            <div class="mt-3">
+                {% if customer.status == 'Active' %}
+                <span class="badge bg-white text-primary fs-6">
+                    <i class="bi bi-check-circle me-1"></i>Active Account
+                </span>
+                {% else %}
+                <span class="badge bg-danger fs-6">
+                    <i class="bi bi-x-circle me-1"></i>Blocked Account
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="profile-stats">
+        {% if customer.loan_amount > 0 %}
+        <div class="profile-stat">
+            <h4><i class="bi bi-cash-stack me-2"></i>Loan Amount</h4>
+            <h3>₹{{ "{:,}".format(customer.loan_amount or 0) }}</h3>
+        </div>
+        <div class="profile-stat">
+            <h4><i class="bi bi-check-circle me-2"></i>Paid Amount</h4>
+            <h3>₹{{ "{:,}".format(customer.paid_amount or 0) }}</h3>
+        </div>
+        <div class="profile-stat">
+            <h4><i class="bi bi-clock me-2"></i>Remaining</h4>
+            {% set remaining = (customer.loan_amount or 0) - (customer.paid_amount or 0) %}
+            <h3 class="{% if remaining > 0 %}text-warning{% else %}text-success{% endif %}">
+                ₹{{ "{:,}".format(remaining) }}
+            </h3>
+        </div>
+        {% else %}
+        <div class="profile-stat">
+            <h4><i class="bi bi-person-x me-2"></i>Loan Status</h4>
+            <h3><span class="badge bg-secondary">No Loan Account</span></h3>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body d-flex gap-3 flex-wrap">
+                {% if customer.loan_amount > 0 %}
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add Payment
+                </button>
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                    <i class="bi bi-dash-circle me-2"></i>Withdraw Amount
+                </button>
+                {% else %}
+                <button class="btn btn-success" disabled>
+                    <i class="bi bi-plus-circle me-2"></i>Add Payment
+                </button>
+                <button class="btn btn-warning" disabled>
+                    <i class="bi bi-dash-circle me-2"></i>Withdraw Amount
+                </button>
+                <span class="badge bg-secondary fs-6 py-2">
+                    <i class="bi bi-info-circle me-1"></i>This customer has no loan.
+                </span>
+                {% endif %}
+                <a href="{{ url_for('block_customer', id=customer.id) }}" 
+                   class="btn {% if customer.status == 'Active' %}btn-danger{% else %}btn-success{% endif %}">
+                    <i class="bi bi {% if customer.status == 'Active' %}bi-lock{% else %}bi-unlock{% endif %} me-2"></i>
+                    {% if customer.status == 'Active' %}Block{% else %}Unblock{% endif %} Customer
+                </a>
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash me-2"></i>Delete Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction History -->
+<div class="row">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="card-header">
+                <i class="bi bi-clock-history me-2"></i>Transaction History
+            </div>
+            <div class="card-body p-0">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transaction Type</th>
+                                <th>Amount</th>
+                                <th>Running Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set running_balance = namespace(total=0) %}
+                            {% for p in payments|reverse %}
+                            {% set running_balance.total = running_balance.total + p.amount %}
+                            <tr>
+                                <td>{{ p.date.strftime('%d %b %Y') if p.date else 'N/A' }}</td>
+                                <td>
+                                    {% if p.amount > 0 %}
+                                    <span class="badge badge-credit">
+                                        <i class="bi bi-arrow-down-circle me-1"></i>Deposit
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-debit">
+                                        <i class="bi bi-arrow-up-circle me-1"></i>Withdraw
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="{% if p.amount > 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                                        {% if p.amount > 0 %}+{% else %}{% endif %}₹{{ "{:,}".format(p.amount|abs) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="{% if running_balance.total >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                                        ₹{{ "{:,}".format(running_balance.total) }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <h4>No Transactions Yet</h4>
+                    <p>This customer hasn't made any transactions yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2 text-success"></i>Add Payment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_collection', id=customer.id) }}">
+                <div class="modal-body">
+                    <input type="hidden" name="transaction_type" value="credit">
+                    <div class="mb-3">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" 
+                               class="form-control" 
+                               name="amount" 
+                               placeholder="Enter amount"
+                               min="1"
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note (Optional)</label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="note" 
+                               placeholder="Add a note">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Add Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-dash-circle me-2 text-warning"></i>Withdraw Amount
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_collection', id=customer.id) }}">
+                <div class="modal-body">
+                    <input type="hidden" name="transaction_type" value="debit">
+                    <div class="mb-3">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" 
+                               class="form-control" 
+                               name="amount" 
+                               placeholder="Enter amount"
+                               min="1"
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note (Optional)</label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="note" 
+                               placeholder="Add a note">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle me-2"></i>Withdraw
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Customer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ customer.name }}</strong>?</p>
+                <p class="text-muted">This action cannot be undone. All transaction history will be lost.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{{ url_for('delete_customer', id=customer.id) }}" class="btn btn-danger">
+                    <i class="bi bi-trash me-2"></i>Delete
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

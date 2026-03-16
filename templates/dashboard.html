@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Daily Collection System{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="page-title">
+    <i class="bi bi-speedometer2 me-2"></i>Dashboard Overview
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Total Customers</h4>
+            <h2>{{ total_customers }}</h2>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="bi bi-cash-stack"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Total Collection</h4>
+            <h2>₹{{ "{:,}".format(total_collection) }}</h2>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Today Collection</h4>
+            <h2>₹{{ "{:,}".format(today_collection) }}</h2>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Pending Amount</h4>
+            <h2>₹{{ "{:,}".format(pending_amount) }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Customer List Table -->
+<div class="table-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people me-2"></i>Customer List</span>
+        <a href="{{ url_for('add_customer') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-person-plus me-1"></i> Add New Customer
+        </a>
+    </div>
+    <div class="card-body p-0">
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>Customer Name</th>
+                        <th>Mobile</th>
+                        <th>Loan Amount</th>
+                        <th>Paid Amount</th>
+                        <th>Remaining</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td>
+                            {% if c.photo %}
+                            <img src="{{ url_for('static', filename='uploads/' + c.photo) }}" 
+                                 alt="{{ c.name }}" 
+                                 class="customer-photo">
+                            {% else %}
+                            <div class="customer-photo bg-primary-light d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person text-primary"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ c.name }}</strong>
+                        </td>
+                        <td>{{ c.mobile }}</td>
+                        <td>
+                            {% if c.loan_amount > 0 %}
+                            ₹{{ "{:,}".format(c.loan_amount or 0) }}
+                            {% else %}
+                            <span class="badge bg-secondary">No Loan</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="amount-positive">₹{{ "{:,}".format(c.paid_amount or 0) }}</span>
+                        </td>
+                        <td>
+                            {% if c.loan_amount > 0 %}
+                            {% set remaining = (c.loan_amount or 0) - (c.paid_amount or 0) %}
+                            <span class="{% if remaining > 0 %}amount-negative{% else %}amount-positive{% endif %}">
+                                ₹{{ "{:,}".format(remaining) }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if c.status == 'Active' %}
+                            <span class="badge badge-active">
+                                <i class="bi bi-check-circle me-1"></i>Active
+                            </span>
+                            {% else %}
+                            <span class="badge badge-blocked">
+                                <i class="bi bi-x-circle me-1"></i>Blocked
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="{{ url_for('customer_profile', id=c.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-people"></i>
+            <h4>No Customers Yet</h4>
+            <p>Add your first customer to get started</p>
+            <a href="{{ url_for('add_customer') }}" class="btn btn-primary mt-3">
+                <i class="bi bi-person-plus me-2"></i>Add Customer
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Payments Section -->
+{% if recent_payments %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="card-header">
+                <i class="bi bi-clock-history me-2"></i>Recent Payments
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in recent_payments %}
+                            <tr>
+                                <td>{{ p.date.strftime('%d %b %Y') if p.date else 'N/A' }}</td>
+                                <td>
+                                    {% set customer = customers|selectattr('id', 'equalto', p.customer_id)|first %}
+                                    {{ customer.name if customer else 'Unknown' }}
+                                </td>
+                                <td>
+                                    {% if p.amount > 0 %}
+                                    <span class="badge badge-credit">
+                                        <i class="bi bi-arrow-down-circle me-1"></i>Deposit
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-debit">
+                                        <i class="bi bi-arrow-up-circle me-1"></i>Withdraw
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="{% if p.amount > 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                                        ₹{{ "{:,}".format(p.amount|abs) }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
