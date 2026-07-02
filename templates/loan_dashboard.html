@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Loan Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <i class="bi bi-cash-stack me-2"></i>Loan Dashboard
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form method="GET" action="{{ url_for('loan_dashboard') }}" class="d-flex">
+            <input type="text" class="form-control me-2" name="search" placeholder="Search by name, mobile, or Aadhaar..." value="{{ search_query or '' }}">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+            {% if search_query %}
+            <a href="{{ url_for('loan_dashboard') }}" class="btn btn-outline-secondary ms-2">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="col-md-4">
+        <div class="btn-group w-100">
+            <a href="{{ url_for('loan_dashboard', filter='', search=search_query) }}" class="btn btn-outline-secondary {% if not status_filter %}active{% endif %}">All</a>
+            <a href="{{ url_for('loan_dashboard', filter='Active', search=search_query) }}" class="btn btn-outline-success {% if status_filter == 'Active' %}active{% endif %}">Active</a>
+            <a href="{{ url_for('loan_dashboard', filter='Blocked', search=search_query) }}" class="btn btn-outline-danger {% if status_filter == 'Blocked' %}active{% endif %}">Blocked</a>
+            <a href="{{ url_for('loan_dashboard', filter='Pending', search=search_query) }}" class="btn btn-outline-warning {% if status_filter == 'Pending' %}active{% endif %}">Pending</a>
+            <a href="{{ url_for('loan_dashboard', filter='Completed', search=search_query) }}" class="btn btn-outline-primary {% if status_filter == 'Completed' %}active{% endif %}">Completed</a>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Loan Customers</h4>
+            <h2>{{ total_loan_customers }}</h2>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="bi bi-cash-stack"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Total Loan Amount</h4>
+            <h2>₹{{ "{:,.0f}".format(total_loan_amount) }}</h2>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Today Collection</h4>
+            <h2>₹{{ "{:,.0f}".format(today_collection) }}</h2>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Pending Amount</h4>
+            <h2>₹{{ "{:,.0f}".format(pending_amount) }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-6 mb-4">
+        <div class="table-card">
+            <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Monthly Collection</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="table-card">
+            <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Paid vs Pending</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="paidPendingChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if recent_payments %}
+<div class="row mt-2">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Recent Payments</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in recent_payments %}
+                            <tr>
+                                <td>{{ p.date.strftime('%d %b %Y') if p.date else 'N/A' }}</td>
+                                <td>
+                                    {% if p.transaction_type == 'credit' %}
+                                    <span class="badge badge-credit"><i class="bi bi-arrow-down-circle me-1"></i>Deposit</span>
+                                    {% else %}
+                                    <span class="badge badge-debit"><i class="bi bi-arrow-up-circle me-1"></i>Withdraw</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="{% if p.transaction_type == 'credit' %}amount-positive{% else %}amount-negative{% endif %}">
+                                        {% if p.transaction_type == 'credit' %}+{% endif %}₹{{ "{:,.0f}".format(p.amount) }}
+                                    </span>
+                                </td>
+                                <td><span class="amount-positive">₹{{ "{:,.0f}".format(p.loan.remaining_amount if p.loan else 0) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ chart_labels | tojson }},
+        datasets: [{
+            label: 'Monthly Collection',
+            data: {{ chart_values | tojson }},
+            backgroundColor: '#3b82f6',
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+const pieCtx = document.getElementById('paidPendingChart').getContext('2d');
+new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Paid', 'Pending'],
+        datasets: [{
+            data: [{{ paid_vs_pending.paid }}, {{ paid_vs_pending.pending }}],
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderWidth: 0
+        }]
+    },
+    options: { responsive: true }
+});
+</script>
+{% endblock %}

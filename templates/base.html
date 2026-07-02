@@ -18,16 +18,32 @@
     <div class="sidebar">
         <div class="sidebar-brand">
             <i class="bi bi-bank2"></i>
-            <span>Daily Collection</span>
+            <span>Loan & Savings</span>
         </div>
         <nav class="sidebar-nav">
             <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </a>
+            <a href="{{ url_for('loan_dashboard') }}" class="nav-link {% if request.endpoint == 'loan_dashboard' %}active{% endif %}">
+                <i class="bi bi-cash-stack"></i>
+                <span>Loans</span>
+            </a>
+            <a href="{{ url_for('savings_dashboard') }}" class="nav-link {% if request.endpoint == 'savings_dashboard' %}active{% endif %}">
+                <i class="bi bi-piggy-bank"></i>
+                <span>Savings</span>
+            </a>
             <a href="{{ url_for('add_customer') }}" class="nav-link {% if request.endpoint == 'add_customer' %}active{% endif %}">
                 <i class="bi bi-person-plus"></i>
                 <span>Add Customer</span>
+            </a>
+            <a href="{{ url_for('reports') }}" class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>Reports</span>
+            </a>
+            <a href="{{ url_for('all_report') }}" class="nav-link {% if request.endpoint == 'all_report' or request.endpoint == 'all_report_export_pdf' %}active{% endif %}">
+                <i class="bi bi-table"></i>
+                <span>All Report</span>
             </a>
             <a href="{{ url_for('logout') }}" class="nav-link logout-link">
                 <i class="bi bi-box-arrow-right"></i>
@@ -42,7 +58,7 @@
         <nav class="top-navbar">
             <div class="navbar-title">
                 <i class="bi bi-bank2"></i>
-                Daily Collection Banking System
+                Loan & Savings Management System
             </div>
             <div class="navbar-agent">
                 <div class="agent-info">

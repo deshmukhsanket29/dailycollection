@@ -704,6 +704,165 @@ body {
     margin: 0;
 }
 
+/* ==================== PREMIUM CUSTOMER FORM ==================== */
+.photo-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.avatar-preview {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.avatar-preview:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.25);
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar-placeholder i {
+    font-size: 52px;
+    color: #94a3b8;
+}
+
+.camera-icon-overlay {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.camera-icon-overlay:hover {
+    transform: scale(1.15);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.upload-area-premium {
+    border: 2px dashed #cbd5e1;
+    border-radius: 16px;
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.upload-area-premium:hover {
+    border-color: #3b82f6;
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.1);
+}
+
+.upload-area-premium .upload-icon {
+    font-size: 42px;
+    color: #3b82f6;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.upload-area-premium .upload-primary-text {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    font-size: 15px;
+}
+
+.upload-area-premium .upload-secondary-text {
+    font-weight: 400;
+    color: #64748b;
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+
+.upload-area-premium .upload-action {
+    color: #3b82f6;
+    font-weight: 700;
+    margin: 8px 0 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.upload-area-premium .upload-meta {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.required-star {
+    color: #ef4444;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+.form-section-divider {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 24px 0;
+}
+
+.form-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-section-title i {
+    color: #3b82f6;
+    font-size: 16px;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
@@ -720,4 +879,34 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* ==================== CHARTS ==================== */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.table-card .card-body canvas {
+    max-height: 320px;
+}
+
+/* ==================== RESPONSIVE ENHANCEMENTS ==================== */
+@media (max-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .page-title {
+        font-size: 22px;
+    }
+    .card-header {
+        font-size: 16px;
+    }
 }

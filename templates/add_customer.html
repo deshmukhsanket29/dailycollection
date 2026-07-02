@@ -1,118 +1,178 @@
 {% extends "base.html" %}
 
-{% block title %}Add Customer - Daily Collection System{% endblock %}
+{% block title %}Add Customer - Loan & Savings Management{% endblock %}
 
 {% block content %}
-<!-- Page Title -->
 <div class="page-title">
-    <i class="bi bi-person-plus me-2"></i>Add New Customer
+    <i class="bi bi-person-plus me-2"></i>Add New Customer / Member
 </div>
 
 <div class="row">
-    <div class="col-lg-8 mx-auto">
+    <div class="col-lg-10 mx-auto">
         <div class="card">
             <div class="card-header">
                 <i class="bi bi-person-plus me-2"></i>Customer Information
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
                     <div class="row">
-                        <!-- Photo Upload -->
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-semibold">Customer Type <span class="required-star">*</span></label>
+                            <select class="form-select form-select-lg" name="customer_type" id="customerType" required onchange="toggleFields()">
+                                <option value="loan">Loan Customer</option>
+                                <option value="savings">Savings Member</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-semibold">Joining Date</label>
+                            <input type="date" class="form-control form-control-lg" name="joining_date" value="{{ '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-4 mb-4">
-                            <label class="form-label">Customer Photo</label>
-                            <div class="upload-area" id="uploadArea" onclick="document.getElementById('photo').click()">
-                                <input type="file" 
-                                       id="photo" 
-                                       name="photo" 
-                                       accept="image/*" 
-                                       style="display: none;"
-                                       onchange="previewImage(event)">
-                                <div id="imagePreviewContainer" style="display: none;">
-                                    <img id="imagePreview" src="" alt="Preview" 
-                                         style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                            <label class="form-label fw-semibold">Customer Photo</label>
+                            <div class="photo-upload-wrapper">
+                                <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('photo').click()">
+                                    <input type="file" id="photo" name="photo" accept="image/png, image/jpeg" style="display: none;" onchange="previewImage(event)">
+                                    <div id="imagePreviewContainer" style="display: none;">
+                                        <img id="imagePreview" src="" alt="Preview">
+                                    </div>
+                                    <div class="avatar-placeholder" id="avatarPlaceholder">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div class="camera-icon-overlay">
+                                        <i class="bi bi-camera"></i>
+                                    </div>
                                 </div>
-                                <div id="uploadIcon">
-                                    <i class="bi bi-cloud-arrow-up"></i>
-                                    <p>Click to upload photo</p>
+
+                                <div class="upload-area-premium" id="uploadArea" onclick="document.getElementById('photo').click()">
+                                    <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                                    <p class="upload-primary-text">Drag & Drop Image Here</p>
+                                    <p class="upload-secondary-text">or</p>
+                                    <p class="upload-action">Click to Upload</p>
+                                    <div class="upload-meta">
+                                        <span>JPG</span>
+                                        <span>•</span>
+                                        <span>JPEG</span>
+                                        <span>•</span>
+                                        <span>PNG</span>
+                                        <span>•</span>
+                                        <span>Max 2 MB</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Customer Details -->
                         <div class="col-md-8">
-                            <div class="mb-3">
-                                <label class="form-label">Customer Name *</label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       name="name" 
-                                       placeholder="Enter customer full name"
-                                       required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Full Name <span class="required-star">*</span></label>
+                                    <input type="text" class="form-control" name="full_name" placeholder="Enter full name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Father Name <span class="required-star">*</span></label>
+                                    <input type="text" class="form-control" name="father_name" placeholder="Enter father name" required>
+                                </div>
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Mobile Number *</label>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       name="mobile" 
-                                       placeholder="Enter mobile number"
-                                       required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Mobile Number <span class="required-star">*</span></label>
+                                    <input type="tel" class="form-control" name="mobile" placeholder="10 digit mobile number" maxlength="10" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Alternate Mobile</label>
+                                    <input type="tel" class="form-control" name="alternate_mobile" placeholder="Optional" maxlength="10">
+                                </div>
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Address</label>
-                                <textarea class="form-control" 
-                                          name="address" 
-                                          rows="2" 
-                                          placeholder="Enter customer address"></textarea>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Aadhaar Number <span class="required-star">*</span></label>
+                                    <input type="text" class="form-control" name="aadhaar" placeholder="12 digit Aadhaar" maxlength="12" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Account Status</label>
+                                    <select class="form-select" name="status">
+                                        <option value="Active">Active</option>
+                                        <option value="Blocked">Blocked</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <hr class="my-4">
+                    <hr class="form-section-divider">
 
-                    <!-- Loan Checkbox -->
+                    <div class="form-section-title">
+                        <i class="bi bi-geo-alt"></i> Address Details
+                    </div>
+
                     <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" 
-                                   type="checkbox" 
-                                   id="hasLoan"
-                                   name="has_loan"
-                                   onchange="toggleLoanField()">
-                            <label class="form-check-label fw-bold" for="hasLoan">
-                                Customer Has Loan
-                            </label>
-                        </div>
+                        <label class="form-label fw-semibold">Full Address <span class="required-star">*</span></label>
+                        <textarea class="form-control" name="address" rows="2" placeholder="Enter complete address" required></textarea>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3" id="loanAmountField" style="display: none;">
-                            <label class="form-label">Loan Amount (₹)</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   name="loan_amount" 
-                                   id="loan_amount_input"
-                                   placeholder="Enter loan amount"
-                                   min="0">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">City</label>
+                            <input type="text" class="form-control" name="city" placeholder="City">
                         </div>
-
-                        <div class="col-md-6 mb-3" id="initialPaymentField" style="display: none;">
-                            <label class="form-label">Initial Payment (₹)</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   name="initial_payment" 
-                                   id="initial_payment_input"
-                                   placeholder="Enter initial payment"
-                                   min="0"
-                                   value="0">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">State</label>
+                            <input type="text" class="form-control" name="state" placeholder="State">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Pincode</label>
+                            <input type="text" class="form-control" name="pincode" placeholder="Pincode">
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2" placeholder="Optional notes about the customer"></textarea>
+                    </div>
+
+                    <hr class="form-section-divider">
+
+                    <div id="loanFields" class="loan-fields">
+                        <div class="form-section-title">
+                            <i class="bi bi-cash-stack"></i> Loan Details
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Loan Amount (₹)</label>
+                                <input type="number" class="form-control form-control-lg" name="loan_amount" id="loanAmountInput" placeholder="Enter loan amount" min="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Initial Payment (₹)</label>
+                                <input type="number" class="form-control form-control-lg" name="initial_payment" id="initialPaymentInput" placeholder="Initial payment" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="savingsFields" class="savings-fields" style="display: none;">
+                        <div class="form-section-title">
+                            <i class="bi bi-piggy-bank"></i> Savings Details
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Daily Saving Amount (₹)</label>
+                                <input type="number" class="form-control form-control-lg" name="daily_amount" id="dailyAmountInput" placeholder="Enter daily saving amount" min="0" value="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Initial Deposit (₹)</label>
+                                <input type="number" class="form-control form-control-lg" name="initial_deposit" id="initialDepositInput" placeholder="Initial deposit" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">
                             <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Create Customer
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Create Record
                         </button>
                     </div>
                 </form>
@@ -122,27 +182,10 @@
 </div>
 
 <script>
-function toggleLoanField() {
-    const checkbox = document.getElementById('hasLoan');
-    const loanField = document.getElementById('loanAmountField');
-    const loanInput = document.getElementById('loan_amount_input');
-    const initialPaymentField = document.getElementById('initialPaymentField');
-    
-    if (checkbox.checked) {
-        loanField.style.display = 'block';
-        initialPaymentField.style.display = 'block';
-        loanInput.required = true;
-    } else {
-        loanField.style.display = 'none';
-        initialPaymentField.style.display = 'none';
-        loanInput.required = false;
-        loanInput.value = 0;
-        // Reset initial payment to 0 when hiding
-        const initialPaymentInput = document.getElementById('initial_payment_input');
-        if (initialPaymentInput) {
-            initialPaymentInput.value = 0;
-        }
-    }
+function toggleFields() {
+    const type = document.getElementById('customerType').value;
+    document.getElementById('loanFields').style.display = type === 'loan' ? 'block' : 'none';
+    document.getElementById('savingsFields').style.display = type === 'savings' ? 'block' : 'none';
 }
 
 function previewImage(event) {
@@ -150,78 +193,200 @@ function previewImage(event) {
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('imagePreview').src = e.target.result;
-            document.getElementById('imagePreviewContainer').style.display = 'block';
-            document.getElementById('uploadIcon').style.display = 'none';
+            const img = document.getElementById('imagePreview');
+            const container = document.getElementById('imagePreviewContainer');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            container.style.display = 'block';
+            placeholder.style.display = 'none';
         }
         reader.readAsDataURL(file);
     }
 }
 
-// Drag and drop functionality
 const uploadArea = document.getElementById('uploadArea');
-
-uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = '#3b82f6';
-    uploadArea.style.background = '#f8fafc';
-});
-
-uploadArea.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = '#cbd5e1';
-    uploadArea.style.background = 'white';
-});
-
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = '#cbd5e1';
-    uploadArea.style.background = 'white';
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        document.getElementById('photo').files = files;
-        previewImage({ target: { files: files } });
-    }
-});
+if (uploadArea) {
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#3b82f6';
+        uploadArea.style.background = '#f8fafc';
+    });
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = 'white';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.background = 'white';
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            document.getElementById('photo').files = files;
+            previewImage({target: {files: files}});
+        }
+    });
+}
 </script>
 
 <style>
-.upload-area {
+.photo-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.avatar-preview {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.avatar-preview:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.25);
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar-placeholder i {
+    font-size: 52px;
+    color: #94a3b8;
+}
+
+.camera-icon-overlay {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.camera-icon-overlay:hover {
+    transform: scale(1.15);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.upload-area-premium {
     border: 2px dashed #cbd5e1;
-    border-radius: 12px;
-    padding: 40px 20px;
+    border-radius: 16px;
+    padding: 28px 16px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #f8fafc;
-    height: 100%;
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    background: white;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-.upload-area:hover {
+.upload-area-premium:hover {
     border-color: #3b82f6;
-    background: #eff6ff;
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.1);
 }
 
-.upload-area i {
-    font-size: 48px;
-    color: #94a3b8;
+.upload-area-premium .upload-icon {
+    font-size: 42px;
+    color: #3b82f6;
     margin-bottom: 12px;
+    display: block;
 }
 
-.upload-area p {
-    color: #64748b;
+.upload-area-premium .upload-primary-text {
+    font-weight: 700;
+    color: #1e293b;
     margin: 0;
-    font-size: 14px;
+    font-size: 15px;
 }
 
-#imagePreviewContainer img {
-    border: 3px solid #e2e8f0;
+.upload-area-premium .upload-secondary-text {
+    font-weight: 400;
+    color: #64748b;
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+
+.upload-area-premium .upload-action {
+    color: #3b82f6;
+    font-weight: 700;
+    margin: 8px 0 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.upload-area-premium .upload-meta {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.required-star {
+    color: #ef4444;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+.form-section-divider {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 24px 0;
+}
+
+.form-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-section-title i {
+    color: #3b82f6;
+    font-size: 16px;
 }
 </style>
 {% endblock %}

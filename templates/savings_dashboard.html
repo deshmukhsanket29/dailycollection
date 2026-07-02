@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Savings Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <i class="bi bi-piggy-bank me-2"></i>Savings Dashboard
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form method="GET" action="{{ url_for('savings_dashboard') }}" class="d-flex">
+            <input type="text" class="form-control me-2" name="search" placeholder="Search by name, mobile, or Aadhaar..." value="{{ search_query or '' }}">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+            {% if search_query %}
+            <a href="{{ url_for('savings_dashboard') }}" class="btn btn-outline-secondary ms-2">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="col-md-4">
+        <div class="btn-group w-100">
+            <a href="{{ url_for('savings_dashboard', filter='', search=search_query) }}" class="btn btn-outline-secondary {% if not status_filter %}active{% endif %}">All</a>
+            <a href="{{ url_for('savings_dashboard', filter='Active', search=search_query) }}" class="btn btn-outline-success {% if status_filter == 'Active' %}active{% endif %}">Active</a>
+            <a href="{{ url_for('savings_dashboard', filter='Blocked', search=search_query) }}" class="btn btn-outline-danger {% if status_filter == 'Blocked' %}active{% endif %}">Blocked</a>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Total Members</h4>
+            <h2>{{ total_members }}</h2>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="bi bi-piggy-bank"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Total Savings</h4>
+            <h2>₹{{ "{:,.0f}".format(total_savings) }}</h2>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Today's Deposit</h4>
+            <h2>₹{{ "{:,.0f}".format(today_deposits) }}</h2>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+            <i class="bi bi-arrow-up-circle"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Today's Withdraw</h4>
+            <h2>₹{{ "{:,.0f}".format(today_withdraw or 0) }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12 mb-4">
+        <div class="table-card">
+            <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Monthly Savings</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="savingsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if recent_transactions %}
+<div class="row mt-2">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Recent Transactions</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in recent_transactions %}
+                            <tr>
+                                <td>{{ p.date.strftime('%d %b %Y') if p.date else 'N/A' }}</td>
+                                <td>
+                                    {% if p.transaction_type == 'credit' %}
+                                    <span class="badge badge-credit"><i class="bi bi-arrow-down-circle me-1"></i>Deposit</span>
+                                    {% else %}
+                                    <span class="badge badge-debit"><i class="bi bi-arrow-up-circle me-1"></i>Withdraw</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="{% if p.transaction_type == 'credit' %}amount-positive{% else %}amount-negative{% endif %}">
+                                        {% if p.transaction_type == 'credit' %}+{% endif %}₹{{ "{:,.0f}".format(p.amount) }}
+                                    </span>
+                                </td>
+                                <td><span class="amount-positive">₹{{ "{:,.0f}".format(p.saving.total_saved if p.saving else 0) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const savingsCtx = document.getElementById('savingsChart').getContext('2d');
+new Chart(savingsCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ chart_labels | tojson }},
+        datasets: [{
+            label: 'Monthly Savings',
+            data: {{ chart_values | tojson }},
+            backgroundColor: '#10b981',
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

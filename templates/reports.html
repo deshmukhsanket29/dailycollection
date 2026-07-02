@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <i class="bi bi-file-earmark-text me-2"></i>Reports
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-calendar-date display-4 text-primary mb-3"></i>
+                <h4 class="card-title">Date Wise Report</h4>
+                <p class="card-text text-muted">View loan and savings collection for any specific date.</p>
+                <form method="GET" action="{{ url_for('reports') }}" class="mt-3">
+                    <input type="hidden" name="mode" value="datewise">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Date</label>
+                        <input type="date" class="form-control" name="report_date" id="report_date" value="{{ selected_date or '' }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i> Generate Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-table display-4 text-success mb-3"></i>
+                <h4 class="card-title">All Report</h4>
+                <p class="card-text text-muted">View complete transaction history of loans and savings.</p>
+                <a href="{{ url_for('all_report') }}" class="btn btn-success w-100 mt-4">
+                    <i class="bi bi-funnel me-1"></i> View All Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if mode == 'datewise' %}
+{% if report_date %}
+<div class="mt-4">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="bi bi-calendar-date"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Report Date</h4>
+                <h2>{{ report_date.strftime('%d %b %Y') }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Total Loan Collection</h4>
+                <h2>Rs.{{ "{:,.0f}".format(total_loan_collection) }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <i class="bi bi-piggy-bank"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Total Savings Collection</h4>
+                <h2>Rs.{{ "{:,.0f}".format(total_savings_collection) }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Total Collection</h4>
+                <h2>Rs.{{ "{:,.0f}".format(total_collection) }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Total Loan Customers</h4>
+                <h2>{{ total_loan_customers }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Total Savings Members</h4>
+                <h2>{{ total_savings_members }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-lg-6 mb-4">
+            <div class="table-card">
+                <div class="card-header">
+                    <i class="bi bi-cash-stack me-2"></i>Loan Collection
+                    <span class="badge bg-primary ms-2">{{ loan_rows|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if loan_rows %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Customer Name</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in loan_rows %}
+                                <tr>
+                                    <td>{{ r.customer_name }}</td>
+                                    <td class="text-end fw-semibold text-success">Rs.{{ "{:,.0f}".format(r.amount) }}</td>
+                                    <td class="text-end">{{ r.time }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body text-center text-muted">No loan collections found for this date.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="table-card">
+                <div class="card-header">
+                    <i class="bi bi-piggy-bank me-2"></i>Savings Collection
+                    <span class="badge bg-success ms-2">{{ savings_rows|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if savings_rows %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Member Name</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in savings_rows %}
+                                <tr>
+                                    <td>{{ r.member_name }}</td>
+                                    <td class="text-end fw-semibold text-success">Rs.{{ "{:,.0f}".format(r.amount) }}</td>
+                                    <td class="text-end">{{ r.time }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body text-center text-muted">No savings collections found for this date.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 mb-5 text-center">
+        <a href="{{ url_for('export_pdf') }}?report_date={{ selected_date }}" class="btn btn-outline-danger btn-lg">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
