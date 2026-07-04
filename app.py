@@ -6,6 +6,7 @@ from datetime import datetime, date, timedelta
 import os
 import re
 import time
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from reportlab.lib import colors
@@ -16,17 +17,24 @@ from reportlab.lib.styles import getSampleStyleSheet
 # ==================== APP CONFIGURATION ====================
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+default_db = 'sqlite:///' + os.path.join(app.instance_path, 'database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', default_db)
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'loan_savings_secret_2024_secure')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['WTF_CSRF_TIME_LIMIT'] = 24 * 60 * 60
+app.config['DEBUG'] = False
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.instance_path, exist_ok=True)
 
 db = SQLAlchemy(app)
 csrf = CSRFProtect(app)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ==================== MODELS ====================
 
@@ -1375,20 +1383,21 @@ def uploaded_file(filename):
 @app.errorhandler(404)
 def not_found(error):
     flash('Page not found.', 'danger')
-    return redirect(url_for('dashboard'))
+    return render_template('404.html'), 404
 
 
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
     flash('An internal error occurred. Please try again.', 'danger')
-    return redirect(url_for('dashboard'))
+    return render_template('500.html'), 500
 
 
 # ==================== RUN APP ====================
 
+with app.app_context():
+    db.create_all()
+    migrate_old_data()
+
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        migrate_old_data()
-    app.run(debug=True)
+    app.run()
